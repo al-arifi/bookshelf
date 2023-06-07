@@ -33,9 +33,7 @@ const addBooks = (req, h) =>{
         updatedAt
     }
 
-    books.push(newBook)
-
-    if(name===undefined){
+    if(name===undefined || name === ''){
         const response = h.response({
             "status": "fail",
             "message": "Gagal menambahkan buku. Mohon isi nama buku"
@@ -53,12 +51,14 @@ const addBooks = (req, h) =>{
         return response
     }
 
+    books.push(newBook)
+
     let isSuccess = books.filter((book) => book.id === id).length > 0
 
     if(isSuccess) {
 
-        console.log('===BERHASIL DITAMBAHKAN===')
-        console.log(newBook)
+        // console.log('===BERHASIL DITAMBAHKAN===')
+        // console.log(newBook)
 
         const response = h.response({
             "status": "success",
@@ -80,9 +80,53 @@ const addBooks = (req, h) =>{
 }
 
 const getAllBooks = (req, h) => {
+
+    if(books.length === 0){
+        return h.response({
+            "status": "success",
+            "data": {
+                "books" : []
+            }
+        }).code(200)
+    }
+
+    let buffer = books
+
+    let {reading, finished, name} = req.query
+    
+    if(reading === '0'){
+        buffer = books.filter((book) => book.reading === false)
+    }
+
+    if(reading === '1'){
+        buffer = books.filter((book) => book.reading === true)
+    }
+
+    if(finished === '0'){
+        buffer = books.filter((book) => book.finished === false)
+    }
+
+    if(finished === '1'){
+        buffer = books.filter((book) => book.finished === true)
+    }
+
+    if(name === "Dicoding"){
+        buffer = books.filter((book) => book.name.toLowerCase().includes('dicoding'))
+    }
+
+    let allBooks = buffer.map((book) => {
+        return {
+            "id" : book.id,
+            "name" : book.name,
+            "publisher" : book.publisher
+        }
+    })
+
     return h.response({
-        "status" : "success",
-        "data" : {books} //BELOM KELARRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+        "status": "success",
+        "data": {
+            "books" : allBooks
+        }
     }).code(200)
 }
 
@@ -96,7 +140,7 @@ const getBook = (req, h) => {
     }
 
     return h.response({
-        "message" : "fail",
+        "status" : "fail",
         "message" : "Buku tidak ditemukan"
     }).code(404)
 }
